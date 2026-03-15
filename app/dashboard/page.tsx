@@ -130,7 +130,7 @@ export default function DashboardPage() {
 
   // ── Upload handler ──
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !session?.user?.id) return;
     setIsUploading(true);
     setUploadError(null);
 
@@ -138,7 +138,13 @@ export default function DashboardPage() {
       const form = new FormData();
       form.append("file", file);
 
-      const res = await fetch("/api/upload", { method: "POST", body: form });
+      // We upload directly to HF to bypass Vercel's 4.5MB request limit
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+      const res = await fetch(`${backendUrl}/api/upload?user_id=${encodeURIComponent(session.user.id)}`, { 
+        method: "POST", 
+        body: form 
+      });
+      
       const data = await res.json();
 
       if (!res.ok) {
@@ -149,7 +155,8 @@ export default function DashboardPage() {
 
       // SWR will start polling automatically once jobId is set
       setJobId(data.job_id);
-    } catch {
+    } catch (err) {
+      console.error("Upload error:", err);
       setUploadError("Network error — could not reach the server.");
     } finally {
       setIsUploading(false);
