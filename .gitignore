@@ -65,3 +65,6 @@ skills-lock.json
 
 # nested project folder (old/duplicate)
 ai-eye-contact/
+
+.vercel
+.env*.local

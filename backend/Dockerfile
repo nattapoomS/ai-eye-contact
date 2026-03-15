@@ -1,34 +1,32 @@
-# ── Stage: runtime ──────────────────────────────────────────────────────────
-# Use CUDA base for GPU support. Swap to python:3.11-slim for CPU-only deploys.
-FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+# Hugging Face Spaces — Docker SDK
+# Runs FastAPI + background worker via supervisord on port 7860
+FROM python:3.11-slim
 
-WORKDIR /app
-
-# System deps for OpenCV + ffmpeg
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libgl1 \
     libglib2.0-0 \
+    supervisor \
     && rm -rf /var/lib/apt/lists/*
 
-# Python deps — install torch first (already in base image), skip re-download
-COPY requirements.txt .
-RUN pip install --no-cache-dir \
-    fastapi \
-    uvicorn \
-    mysql-connector-python \
-    ffmpeg-python \
-    python-dotenv \
-    pydantic \
-    opencv-python-headless \
-    mediapipe
+# HF Spaces requires uid 1000
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH
 
-# Copy source
-COPY . .
+WORKDIR $HOME/app
 
-# Ensure output directories exist
-RUN mkdir -p temp_audio temp_frames processed_frames
+COPY --chown=user:user requirements.koyeb.txt .
+RUN pip install --no-cache-dir -r requirements.koyeb.txt
 
-EXPOSE 8000
+COPY --chown=user:user . .
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Directories used by the processing pipeline
+RUN mkdir -p temp_audio temp_frames processed_frames $HOME/uploads/finished
+ENV FINISHED_DIR=$HOME/uploads/finished
+
+EXPOSE 7860
+
+COPY --chown=user:user supervisord.hf.conf /tmp/supervisord.conf
+CMD ["supervisord", "-n", "-c", "/tmp/supervisord.conf"]
