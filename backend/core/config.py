@@ -6,17 +6,14 @@ dotenv_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
 load_dotenv(dotenv_path=dotenv_path)
 
 class Settings:
-    DB_HOST: str = os.getenv("DB_HOST", "localhost")
-    DB_PORT: int = int(os.getenv("DB_PORT", "3307"))
-    DB_USER: str = os.getenv("DB_USER", "root")
-    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "")
-    DB_NAME: str = os.getenv("DB_NAME", "ai_eye_contact")
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
     
     # Paths
     TEMP_AUDIO_DIR = os.path.join(os.path.dirname(__file__), "..", "temp_audio")
     TEMP_FRAMES_DIR = os.path.join(os.path.dirname(__file__), "..", "temp_frames")
     PROCESSED_FRAMES_DIR = os.path.join(os.path.dirname(__file__), "..", "processed_frames")
-    FINISHED_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "finished")
+    FINISHED_DIR = os.getenv("FINISHED_DIR", os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "finished"))
 
     # Video settings
     OUTPUT_FPS: int = 30

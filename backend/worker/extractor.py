@@ -14,11 +14,14 @@ def extract_audio(video_path: str, job_id: str) -> str:
         ffmpeg_path, "-y", "-i", video_path,
         "-q:a", "0", "-map", "a", audio_path
     ]
-    
+
     print(f"[{job_id}] Extracting audio...")
-    subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    if result.returncode != 0:
+        print(f"[{job_id}] No audio track found, skipping audio extraction.")
+        return None
     print(f"[{job_id}] Audio extracted to {audio_path}")
-    
+
     return audio_path
 
 def extract_frames(video_path: str, job_id: str) -> str:

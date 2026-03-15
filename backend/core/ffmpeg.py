@@ -28,5 +28,5 @@ def find_ffmpeg() -> str:
             return path
 
     raise FileNotFoundError(
-        "ffmpeg not found. Install via: winget install --id Gyan.FFmpeg"
+        "ffmpeg not found. On Linux: apt install ffmpeg. On Windows: winget install --id Gyan.FFmpeg"
     )

@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-mysql-connector-python
+supabase
 ffmpeg-python
 python-dotenv
 pydantic

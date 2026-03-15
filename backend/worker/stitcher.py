@@ -5,7 +5,7 @@ import subprocess
 from traceback import format_exc
 
 from core.config import settings
-from core.database import get_db_connection
+from core.database import get_supabase_client
 from core.ffmpeg import find_ffmpeg
 
 
@@ -69,27 +69,19 @@ def _cleanup(job_id: str) -> None:
 
 
 def _update_db(job_id: str, status: str, file_path: str | None = None) -> None:
-    """Update job status (and optionally file_path) in MySQL."""
-    conn = get_db_connection()
-    if not conn:
+    """Update job status (and optionally file_path) in Supabase."""
+    supabase = get_supabase_client()
+    if not supabase:
         raise ConnectionError("Could not connect to database for status update.")
+    
+    data = {"status": status}
+    if file_path:
+        data["file_path"] = file_path
+        
     try:
-        cursor = conn.cursor()
-        if file_path:
-            cursor.execute(
-                "UPDATE video_jobs SET status = %s, file_path = %s WHERE id = %s",
-                (status, file_path, job_id),
-            )
-        else:
-            cursor.execute(
-                "UPDATE video_jobs SET status = %s WHERE id = %s",
-                (status, job_id),
-            )
-        conn.commit()
-    finally:
-        if conn.is_connected():
-            cursor.close()
-            conn.close()
+        supabase.table("video_jobs").update(data).eq("id", job_id).execute()
+    except Exception as e:
+        print(f"[{job_id}] DB Update Error: {e}")
 
 
 def stitch_job(job_id: str) -> bool:
@@ -135,9 +127,35 @@ def stitch_job(job_id: str) -> bool:
         print(f"[{job_id}] Cleaning up temp files...")
         _cleanup(job_id)
 
-        # Step 4 — Update DB
-        _update_db(job_id, "completed", output_path)
-        print(f"[{job_id}] Done. Output saved to: {output_path}")
+        # Step 3.5 - Upload to Supabase Storage
+        print(f"[{job_id}] Uploading to Supabase Storage...")
+        supabase = get_supabase_client()
+        if supabase:
+            try:
+                with open(output_path, "rb") as f:
+                    supabase.storage.from_("processed_videos").upload(
+                        file=f,
+                        path=f"{job_id}.mp4",
+                        file_options={"content-type": "video/mp4"}
+                    )
+                public_url = supabase.storage.from_("processed_videos").get_public_url(f"{job_id}.mp4")
+                
+                # Step 4 — Update DB with Public URL, remove local file
+                _update_db(job_id, "completed", public_url)
+                if os.path.isfile(output_path):
+                    os.remove(output_path)
+                print(f"[{job_id}] Done. Output uploaded to Supabase: {public_url}")
+                
+            except Exception as e:
+                print(f"[{job_id}] Supabase upload failed: {e}")
+                # Fallback to local path if upload fails
+                _update_db(job_id, "completed", output_path)
+                print(f"[{job_id}] Done. Output saved locally (fallback).")
+        else:
+            # Step 4 — Update DB
+            _update_db(job_id, "completed", output_path)
+            print(f"[{job_id}] Done. Output saved locally: {output_path}")
+
         return True
 
     except Exception as e:

@@ -1,19 +1,17 @@
-import mysql.connector
-from mysql.connector import Error
+import os
+from supabase import create_client, Client
 from core.config import settings
 
-def get_db_connection():
-    """Create and return a MySQL database connection."""
+def get_supabase_client() -> Client | None:
+    """Create and return a Supabase client connection."""
+    url: str = settings.SUPABASE_URL
+    key: str = settings.SUPABASE_KEY
+    if not url or not key:
+        print("Error: SUPABASE_URL or SUPABASE_KEY is missing in environment variables.")
+        return None
     try:
-        connection = mysql.connector.connect(
-            host=settings.DB_HOST,
-            port=settings.DB_PORT,
-            user=settings.DB_USER,
-            password=settings.DB_PASSWORD,
-            database=settings.DB_NAME
-        )
-        if connection.is_connected():
-            return connection
-    except Error as e:
-        print(f"Error while connecting to MySQL: {e}")
-    return None
+        supabase: Client = create_client(url, key)
+        return supabase
+    except Exception as e:
+        print(f"Error while connecting to Supabase: {e}")
+        return None
