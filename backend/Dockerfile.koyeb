@@ -1,0 +1,25 @@
+# CPU-only build for Koyeb (no GPU available)
+# Combines backend API + worker into one service via supervisord
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    libgl1 \
+    libglib2.0-0 \
+    supervisor \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.koyeb.txt .
+RUN pip install --no-cache-dir -r requirements.koyeb.txt
+
+COPY . .
+
+RUN mkdir -p temp_audio temp_frames processed_frames ../uploads/finished
+
+COPY supervisord.conf /etc/supervisor/conf.d/app.conf
+
+EXPOSE 8000
+
+CMD ["supervisord", "-n", "-c", "/etc/supervisor/conf.d/app.conf"]

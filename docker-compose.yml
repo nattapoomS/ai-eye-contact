@@ -1,0 +1,88 @@
+services:
+
+  # ── MySQL ──────────────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-ai_eye_contact}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI Backend ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env.docker
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+    volumes:
+      - uploads_data:/app/../uploads          # shared with worker & frontend
+      - temp_data:/app/temp_frames
+      - temp_data:/app/temp_audio
+      - processed_data:/app/processed_frames
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # ── Background Worker ──────────────────────────────────────────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    env_file: .env.docker
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+    volumes:
+      - uploads_data:/app/../uploads
+      - temp_data:/app/temp_frames
+      - temp_data:/app/temp_audio
+      - processed_data:/app/processed_frames
+    depends_on:
+      mysql:
+        condition: service_healthy
+    # Uncomment for GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # ── Next.js Frontend ───────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Public URL where the backend is reachable FROM THE BROWSER
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8000}
+    restart: unless-stopped
+    env_file: .env.docker
+    environment:
+      # Server-side fetch (Next.js API routes → backend): use internal Docker hostname
+      BACKEND_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  uploads_data:
+  temp_data:
+  processed_data:

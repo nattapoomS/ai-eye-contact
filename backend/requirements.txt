@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+mysql-connector-python
+ffmpeg-python
+python-dotenv
+pydantic
+opencv-python
+mediapipe
+torch --index-url https://download.pytorch.org/whl/cu121
+torchvision --index-url https://download.pytorch.org/whl/cu121

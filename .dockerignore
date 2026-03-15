@@ -1,0 +1,12 @@
+node_modules
+.next
+uploads
+backend/temp_frames
+backend/temp_audio
+backend/processed_frames
+backend/__pycache__
+backend/**/__pycache__
+*.pyc
+.env
+.env.local
+.git

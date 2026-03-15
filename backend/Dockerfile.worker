@@ -1,0 +1,27 @@
+# Same base as backend — shares the AI model dependencies
+FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir \
+    fastapi \
+    uvicorn \
+    mysql-connector-python \
+    ffmpeg-python \
+    python-dotenv \
+    pydantic \
+    opencv-python-headless \
+    mediapipe
+
+COPY . .
+
+RUN mkdir -p temp_audio temp_frames processed_frames
+
+CMD ["python", "-m", "worker.job_poller"]

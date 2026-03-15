@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+mysql-connector-python
+ffmpeg-python
+python-dotenv
+pydantic
+opencv-python-headless
+mediapipe
+torch --index-url https://download.pytorch.org/whl/cpu
+torchvision --index-url https://download.pytorch.org/whl/cpu
