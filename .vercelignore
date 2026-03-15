@@ -7,8 +7,6 @@ temp_frames
 temp_audio
 processed_frames
 *.mp4
-*.png
-*.jpg
 .git
 .vscode
 .agents
