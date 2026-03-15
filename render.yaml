@@ -1,0 +1,58 @@
+services:
+  # ── MySQL Database ────────────────────────────────────────────────────────
+  - type: pserv
+    name: ai-eye-mysql
+    env: image
+    image:
+      url: docker.io/library/mysql:8.0
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 1
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+      - key: MYSQL_DATABASE
+        value: ai_eye_contact
+
+  # ── FastAPI Backend ────────────────────────────────────────────────────────
+  - type: web
+    name: ai-eye-backend
+    env: docker
+    rootDir: backend
+    dockerfilePath: Dockerfile.koyeb
+    plan: starter # Need starter plan for enough RAM for FFmpeg/Python
+    disk:
+      name: uploads-data
+      mountPath: /uploads
+      sizeGB: 1
+    envVars:
+      - key: DB_HOST
+        value: ai-eye-mysql
+      - key: DB_USER
+        value: root
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_PASSWORD
+        fromService:
+          type: pserv
+          name: ai-eye-mysql
+          envVarKey: MYSQL_ROOT_PASSWORD
+      - key: DB_NAME
+        value: ai_eye_contact
+
+  # ── Next.js Frontend ───────────────────────────────────────────────────────
+  - type: web
+    name: ai-eye-frontend
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: free # Can be free plan
+    envVars:
+      - key: NEXT_PUBLIC_BACKEND_URL
+        sync: false # User will be prompted to enter this
+      - key: BACKEND_URL
+        sync: false # User will be prompted to enter this
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      - key: BETTER_AUTH_URL
+        sync: false # User will be prompted to enter this
