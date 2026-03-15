@@ -252,7 +252,7 @@ export default function DashboardPage() {
           <div className="liquid-glass-pill rounded-3xl p-8" style={{ borderRadius: "1.5rem" }}>
 
             {/* ── State: no file & no job ── */}
-            {!file && !job && (
+            {!file && !jobId && (
               <div
                 {...getRootProps()}
                 className={`border border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300
@@ -271,7 +271,7 @@ export default function DashboardPage() {
             )}
 
             {/* ── State: file selected ── */}
-            {file && !job && !isUploading && (
+            {file && !jobId && !isUploading && (
               <div className="flex flex-col items-center">
                 <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-5">
                   <FileVideo size={26} className="text-white/60" />
