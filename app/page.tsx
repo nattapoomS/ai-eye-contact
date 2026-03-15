@@ -7,7 +7,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import LightRays from '@/components/LightRays';
-import GlassSurface from '@/components/GlassSurface'
 
 const instrumentSerif = Instrument_Serif({
   weight: "400",
@@ -150,19 +149,23 @@ export default function LandingPage() {
               visible: { opacity: 1, scale: 1, transition: { duration: 0.4 } },
             }}
           >
-<button
-            onClick={() => router.push("/auth?tab=signup")}
-            className=" px-8 py-2.5 text-sm"
-          >
-            <GlassSurface 
-  width={150} 
-  height={50}
-  borderRadius={50}
-  className="my-custom-class"
->
-  <h2>Get Started</h2>
-</GlassSurface>
-          </button>
+            <button
+              onClick={() => router.push("/auth?tab=signup")}
+              className="group relative px-8 py-3.5 text-sm font-medium rounded-full overflow-hidden transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_40px_rgba(116,61,245,0.2)] hover:shadow-[0_0_60px_rgba(116,61,245,0.4)]"
+            >
+              {/* Glass background */}
+              <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-full transition-colors group-hover:bg-white/15" />
+              
+              {/* Glow effect */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-linear-to-r from-blue-500/30 via-purple-500/30 to-blue-500/30 blur-xl" />
+              
+              <span className="relative z-10 text-white flex items-center gap-2 text-base">
+                Get Started
+                <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
+            </button>
           </motion.div>
         </motion.div>
 
