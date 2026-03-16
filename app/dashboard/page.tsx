@@ -105,13 +105,14 @@ export default function DashboardPage() {
 
   // ── Entry animation ──
   useEffect(() => {
+    if (isPending || !session) return;
     const ctx = gsap.context(() => {
       gsap.from(".animate-in", {
         y: 30, opacity: 0, duration: 1.2, stagger: 0.15, ease: "power3.out",
       });
     }, containerRef);
     return () => ctx.revert();
-  }, []);
+  }, [isPending, session]);
 
   // ── Processing bar animation ──
   const isActive = job && job.status !== "completed" && job.status !== "failed";
@@ -229,7 +230,7 @@ export default function DashboardPage() {
 
         {/* Heading */}
         <motion.div
-          className="text-center mb-10 animate-in"
+          className="text-center mb-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -244,7 +245,7 @@ export default function DashboardPage() {
 
         {/* Panel */}
         <motion.div
-          className="w-full max-w-lg animate-in"
+          className="w-full max-w-lg"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
